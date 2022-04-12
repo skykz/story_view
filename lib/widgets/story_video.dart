@@ -25,8 +25,8 @@ class VideoLoader {
       onComplete();
     }
 
-    final fileStream = DefaultCacheManager()
-        .getFileStream(this.url, headers: this.requestHeaders as Map<String, String>?);
+    final fileStream = DefaultCacheManager().getFileStream(this.url,
+        headers: this.requestHeaders as Map<String, String>?);
 
     fileStream.listen((fileResponse) {
       if (fileResponse is FileInfo) {
@@ -125,13 +125,15 @@ class StoryVideoState extends State<StoryVideo> {
               ),
             ),
           )
-        : Center(
-            child: Text(
-            "Media failed to load.",
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ));
+        : widget.videoLoader.state == LoadState.failure
+            ? Center(
+                child: Text(
+                "Media failed to load.",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ))
+            : const SizedBox();
   }
 
   @override
@@ -148,6 +150,7 @@ class StoryVideoState extends State<StoryVideo> {
   void dispose() {
     playerController?.dispose();
     _streamSubscription?.cancel();
+    
     super.dispose();
   }
 }

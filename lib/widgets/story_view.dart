@@ -29,14 +29,12 @@ class StoryItem {
   /// is because the next item to be displayed is taken by the last unshown
   /// story item.
   bool shown;
+  int id;
 
   /// The page content
   final Widget view;
-  StoryItem(
-    this.view, {
-    required this.duration,
-    this.shown = false,
-  });
+  StoryItem(this.view,
+      {required this.duration, this.shown = false, required this.id});
 
   /// Short hand to create text-only page.
   ///
@@ -49,6 +47,7 @@ class StoryItem {
   static StoryItem text({
     required String title,
     required Color backgroundColor,
+    required int id,
     Key? key,
     TextStyle? textStyle,
     bool shown = false,
@@ -67,37 +66,37 @@ class StoryItem {
     ] /** white text */);
 
     return StoryItem(
-      Container(
-        key: key,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(roundedTop ? 8 : 0),
-            bottom: Radius.circular(roundedBottom ? 8 : 0),
+        Container(
+          key: key,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(roundedTop ? 8 : 0),
+              bottom: Radius.circular(roundedBottom ? 8 : 0),
+            ),
           ),
-        ),
-        padding: EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 16,
-        ),
-        child: Center(
-          child: Text(
-            title,
-            style: textStyle?.copyWith(
-                  color: contrast > 1.8 ? Colors.white : Colors.black,
-                ) ??
-                TextStyle(
-                  color: contrast > 1.8 ? Colors.white : Colors.black,
-                  fontSize: 18,
-                ),
-            textAlign: TextAlign.center,
+          padding: EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 16,
           ),
+          child: Center(
+            child: Text(
+              title,
+              style: textStyle?.copyWith(
+                    color: contrast > 1.8 ? Colors.white : Colors.black,
+                  ) ??
+                  TextStyle(
+                    color: contrast > 1.8 ? Colors.white : Colors.black,
+                    fontSize: 18,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          //color: backgroundColor,
         ),
-        //color: backgroundColor,
-      ),
-      shown: shown,
-      duration: duration ?? Duration(seconds: 3),
-    );
+        shown: shown,
+        duration: duration ?? Duration(seconds: 3),
+        id: id);
   }
 
   /// Factory constructor for page images. [controller] should be same instance as
@@ -105,6 +104,7 @@ class StoryItem {
   factory StoryItem.pageImage({
     required String url,
     required StoryController controller,
+    required int id,
     Key? key,
     BoxFit imageFit = BoxFit.fitWidth,
     String? caption,
@@ -144,6 +144,7 @@ class StoryItem {
         ),
       ),
       shown: shown,
+      id: id,
       duration: duration ?? Duration(seconds: 3),
     );
   }
@@ -152,6 +153,7 @@ class StoryItem {
   /// one passed to the `StoryView`
   factory StoryItem.inlineImage({
     required String url,
+    required int id,
     Text? caption,
     required StoryController controller,
     Key? key,
@@ -195,6 +197,7 @@ class StoryItem {
         ),
       ),
       shown: shown,
+      id: id,
       duration: duration ?? Duration(seconds: 3),
     );
   }
@@ -204,6 +207,7 @@ class StoryItem {
   factory StoryItem.pageVideo(
     String url, {
     required StoryController controller,
+    required int id,
     Key? key,
     Duration? duration,
     BoxFit imageFit = BoxFit.fitWidth,
@@ -240,6 +244,7 @@ class StoryItem {
           ),
         ),
         shown: shown,
+        id: id,
         duration: duration ?? Duration(seconds: 10));
   }
 
@@ -249,6 +254,7 @@ class StoryItem {
   factory StoryItem.pageProviderImage(
     ImageProvider image, {
     Key? key,
+    required int id,
     BoxFit imageFit = BoxFit.fitWidth,
     String? caption,
     bool shown = false,
@@ -290,6 +296,7 @@ class StoryItem {
           ),
         ),
         shown: shown,
+        id: id,
         duration: duration ?? Duration(seconds: 3));
   }
 
@@ -300,6 +307,7 @@ class StoryItem {
     ImageProvider image, {
     Key? key,
     Text? caption,
+    required int id,
     bool shown = false,
     bool roundedTop = true,
     bool roundedBottom = false,
@@ -330,6 +338,7 @@ class StoryItem {
         ),
       ),
       shown: shown,
+      id: id,
       duration: duration ?? Duration(seconds: 3),
     );
   }
@@ -401,8 +410,8 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
 
   Widget get _currentView {
     var item = widget.storyItems.firstWhereOrNull((it) => !it!.shown);
-    item ??= widget.storyItems.last;
-    return item?.view ?? Container();
+    item ??= widget.storyItems.length > 0 ? widget.storyItems.last : null;
+    return item?.view ?? Container(color: Colors.black);
   }
 
   @override
@@ -457,7 +466,6 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
 
     _animationController?.dispose();
     _playbackSubscription?.cancel();
-
     super.dispose();
   }
 
@@ -471,6 +479,7 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
   void _play() {
     _animationController?.dispose();
     // get the next playing page
+
     final storyItem = widget.storyItems.firstWhere((it) {
       return !it!.shown;
     })!;
